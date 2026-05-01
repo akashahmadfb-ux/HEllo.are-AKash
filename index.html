@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>✦ Okay Finance — It's Okay to Not Be Okay</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #root { height: 100%; width: 100%; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #f5edd8; -webkit-font-smoothing: antialiased; }
+  input, textarea, button, select { font-family: inherit; }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7) sepia(1) saturate(2) hue-rotate(10deg); }
+
+  @keyframes bookOpen {
+    0% { transform: perspective(400px) rotateY(0deg); }
+    100% { transform: perspective(400px) rotateY(-30deg); }
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeInFast { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes pulse {
+    0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 0.6; }
+    50% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
+  }
+  @keyframes float0  { 0%{transform:translateY(0);opacity:0} 20%{opacity:0.5} 80%{opacity:0.5} 100%{transform:translateY(-220px);opacity:0} }
+  @keyframes float1  { 0%{transform:translateY(0);opacity:0} 20%{opacity:0.4} 80%{opacity:0.4} 100%{transform:translateY(-260px);opacity:0} }
+  @keyframes float2  { 0%{transform:translateY(0);opacity:0} 20%{opacity:0.6} 80%{opacity:0.6} 100%{transform:translateY(-180px);opacity:0} }
+  @keyframes float3  { 0%{transform:translateY(0);opacity:0} 25%{opacity:0.5} 75%{opacity:0.5} 100%{transform:translateY(-300px);opacity:0} }
+  @keyframes float4  { 0%{transform:translateY(0);opacity:0} 20%{opacity:0.4} 80%{opacity:0.4} 100%{transform:translateY(-200px);opacity:0} }
+  @keyframes float5  { 0%{transform:translateY(0);opacity:0} 30%{opacity:0.6} 70%{opacity:0.6} 100%{transform:translateY(-240px);opacity:0} }
+  @keyframes float6  { 0%{transform:translateY(0);opacity:0} 20%{opacity:0.5} 80%{opacity:0.5} 100%{transform:translateY(-210px);opacity:0} }
+  @keyframes float7  { 0%{transform:translateY(0);opacity:0} 25%{opacity:0.4} 75%{opacity:0.4} 100%{transform:translateY(-280px);opacity:0} }
+  @keyframes float8  { 0%{transform:translateY(0);opacity:0} 20%{opacity:0.6} 80%{opacity:0.6} 100%{transform:translateY(-190px);opacity:0} }
+  @keyframes float9  { 0%{transform:translateY(0);opacity:0} 30%{opacity:0.5} 70%{opacity:0.5} 100%{transform:translateY(-230px);opacity:0} }
+  @keyframes float10 { 0%{transform:translateY(0);opacity:0} 20%{opacity:0.4} 80%{opacity:0.4} 100%{transform:translateY(-270px);opacity:0} }
+  @keyframes float11 { 0%{transform:translateY(0);opacity:0} 25%{opacity:0.5} 75%{opacity:0.5} 100%{transform:translateY(-250px);opacity:0} }
+  @keyframes toastIn { from { transform:translateY(100px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+  @keyframes deleteOut { to { opacity:0; transform:translateX(20px); } }
+  @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+  @keyframes starPulse { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
+
+  .book-left { animation: bookOpen 1.2s ease-out forwards; transform-origin: right center; }
+  .tab-content { animation: fadeIn 250ms ease-out both; }
+  .toast { animation: toastIn 300ms ease-out both; }
+  .delete-anim { animation: deleteOut 300ms ease-out forwards; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(212,168,83,0.2); border-radius: 2px; }
+
+  input:focus, textarea:focus { outline: none; }
+  button { cursor: pointer; border: none; background: none; }
+
+  .filter-scroll { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+  .filter-scroll::-webkit-scrollbar { display:none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+const CREDS = { user: 'Akash76', pass: 'Akash76##..' };
+const SEED_TX = [
+  { id:'t1', type:'income',  amount:25000, category:'Salary',   description:'Monthly salary arrived',          date:'2025-05-01', note:'' },
+  { id:'t2', type:'expense', amount:3500,  category:'Food',     description:'Tea, groceries and a quiet meal', date:'2025-05-05', note:'' },
+  { id:'t3', type:'expense', amount:1200,  category:'Travel',   description:'Rickshaw and bus fare',           date:'2025-05-08', note:'' },
+  { id:'t4', type:'expense', amount:5000,  category:'Study',    description:'University tuition installment',  date:'2025-05-10', note:'' },
+  { id:'t5', type:'income',  amount:8000,  category:'Freelance',description:'Design project payment',         date:'2025-05-15', note:'' },
+];
+const CAT_COLORS = { Food:'#d4a853', Study:'#7ab8b8', Travel:'#b88ad4', Shop:'#d4807e', Health:'#7ab88a', Bills:'#b8a87a', Fun:'#d4b07a', Other:'#8a9ab8', Salary:'#d4a853', Freelance:'#7ab8b8', Gift:'#b88ad4', Invest:'#7ab88a' };
+const EXPENSE_CATS = [
+  {emoji:'🍵',label:'Food'},{emoji:'🎓',label:'Study'},{emoji:'🚌',label:'Travel'},
+  {emoji:'🛍️',label:'Shop'},{emoji:'🏥',label:'Health'},{emoji:'💡',label:'Bills'},
+  {emoji:'🎭',label:'Fun'},{emoji:'💳',label:'Other'}
+];
+const INCOME_CATS = [
+  {emoji:'💼',label:'Salary'},{emoji:'🎨',label:'Freelance'},{emoji:'🎁',label:'Gift'},
+  {emoji:'📈',label:'Invest'},{emoji:'💰',label:'Other'}
+];
+
+// ─── Utils ────────────────────────────────────────────────────────────────────
+const fmt = n => Number(n).toLocaleString('en-IN');
+const today = () => new Date().toISOString().split('T')[0];
+const uid = () => Math.random().toString(36).slice(2,10);
+
+function getMonthName(d) {
+  return new Date(d).toLocaleString('en-US',{month:'short'});
+}
+function getDayMonth(d) {
+  const dt = new Date(d);
+  return { day: dt.getDate(), month: dt.toLocaleString('en-US',{month:'short'}).toUpperCase() };
+}
+function dateLabel() {
+  return new Date().toLocaleDateString('en-US',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+function greeting() {
+  const h = new Date().getHours();
+  if(h < 12) return 'Morning';
+  if(h < 17) return 'Afternoon';
+  return 'Evening';
+}
+
+// ─── LocalStorage Helpers ─────────────────────────────────────────────────────
+function loadTx() {
+  try { const d = JSON.parse(localStorage.getItem('okf_transactions')); return Array.isArray(d) ? d : null; } catch { return null; }
+}
+function saveTx(d) { localStorage.setItem('okf_transactions', JSON.stringify(d)); }
+function loadGoals() {
+  try { const d = JSON.parse(localStorage.getItem('okf_goals')); return Array.isArray(d) ? d : []; } catch { return []; }
+}
+function saveGoals(d) { localStorage.setItem('okf_goals', JSON.stringify(d)); }
+function loadSession() {
+  try { return JSON.parse(localStorage.getItem('okf_session')) || null; } catch { return null; }
+}
+function saveSession(s) { localStorage.setItem('okf_session', JSON.stringify(s)); }
+
+// ─── Animated Counter ─────────────────────────────────────────────────────────
+function AnimCounter({ target, prefix='', duration=800 }) {
+  const [val, setVal] = useState(0);
+  const ref = useRef(null);
+  useEffect(() => {
+    let start = null;
+    const step = ts => {
+      if (!start) start = ts;
+      const progress = Math.min((ts - start) / duration, 1);
+      setVal(Math.floor(progress * target));
+      if (progress < 1) ref.current = requestAnimationFrame(step);
+    };
+    ref.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(ref.current);
+  }, [target]);
+  return <span>{prefix}{fmt(val)}</span>;
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function Toast({ msg, onDone }) {
+  useEffect(() => { const t = setTimeout(onDone, 3000); return () => clearTimeout(t); }, []);
+  return (
+    <div className="toast" style={{
+      position:'fixed', bottom:84, left:'50%', transform:'translateX(-50%)',
+      background:'rgba(30,24,16,0.97)', border:'1px solid rgba(212,168,83,0.4)',
+      color:'#d4a853', padding:'12px 24px', borderRadius:12, fontSize:13,
+      zIndex:9999, whiteSpace:'nowrap', boxShadow:'0 4px 24px rgba(0,0,0,0.4)'
+    }}>{msg}</div>
+  );
+}
+
+// ─── Ambient Particles ────────────────────────────────────────────────────────
+function Particles() {
+  const particles = useRef([...Array(12)].map((_,i) => ({
+    left: `${5+Math.random()*90}%`,
+    bottom: `${Math.random()*40}%`,
+    delay: `${(i*0.8).toFixed(1)}s`,
+    dur: `${10+Math.random()*5}s`,
+    idx: i
+  }))).current;
+  return (
+    <div style={{position:'fixed',inset:0,pointerEvents:'none',overflow:'hidden',zIndex:0}}>
+      {particles.map(p => (
+        <div key={p.idx} style={{
+          position:'absolute', left:p.left, bottom:p.bottom,
+          width:4, height:4, borderRadius:'50%',
+          background:'rgba(212,168,83,0.3)',
+          animationName:`float${p.idx}`, animationDuration:p.dur,
+          animationDelay:p.delay, animationTimingFunction:'ease-in-out',
+          animationIterationCount:'infinite'
+        }} />
+      ))}
+    </div>
+  );
+}
+
+// ─── Login Screen ─────────────────────────────────────────────────────────────
+function LoginScreen({ onLogin }) {
+  const [user, setUser] = useState('');
+  const [pass, setPass] = useState('');
+  const [err, setErr] = useState(false);
+  const [fading, setFading] = useState(false);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (user === CREDS.user && pass === CREDS.pass) {
+      setErr(false);
+      setFading(true);
+      setTimeout(() => onLogin(user), 420);
+    } else {
+      setErr(true);
+    }
+  }
+
+  const inputStyle = {
+    width:'100%', padding:'14px 18px',
+    background:'rgba(255,255,255,0.04)',
+    border:'1px solid rgba(212,168,83,0.2)', borderRadius:10,
+    color:'#f5edd8', fontSize:15,
+    transition:'border-color 200ms, box-shadow 200ms'
+  };
+  const labelStyle = {
+    display:'block', fontSize:11, color:'rgba(245,237,216,0.5)',
+    letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:8
+  };
+
+  return (
+    <div style={{
+      minHeight:'100vh', background:'#0d1117',
+      display:'flex', alignItems:'center', justifyContent:'center',
+      padding:'20px'
+    }}>
+      <div style={{
+        width:380, maxWidth:'90vw', padding:'48px 40px',
+        background:'rgba(20,16,12,0.9)',
+        border:'1px solid rgba(212,168,83,0.2)', borderRadius:24,
+        boxShadow:'0 0 60px rgba(212,168,83,0.08)',
+        opacity: fading ? 0 : 1, transition:'opacity 400ms',
+        animation: 'fadeIn 500ms ease-out both'
+      }}>
+        {/* Book SVG */}
+        <div style={{display:'flex',justifyContent:'center',marginBottom:20}}>
+          <svg width="56" height="44" viewBox="0 0 56 44" fill="none" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+            {/* Right cover (static) */}
+            <rect x="28" y="4" width="22" height="36" rx="3" fill="rgba(212,168,83,0.15)" stroke="rgba(212,168,83,0.5)" strokeWidth="1.5"/>
+            <line x1="30" y1="10" x2="46" y2="10" stroke="rgba(212,168,83,0.3)" strokeWidth="1"/>
+            <line x1="30" y1="15" x2="46" y2="15" stroke="rgba(212,168,83,0.2)" strokeWidth="1"/>
+            <line x1="30" y1="20" x2="46" y2="20" stroke="rgba(212,168,83,0.2)" strokeWidth="1"/>
+            {/* Spine */}
+            <rect x="25" y="4" width="6" height="36" rx="1" fill="rgba(212,168,83,0.3)"/>
+            {/* Left cover (animated) */}
+            <g className="book-left" style={{transformOrigin:'31px 22px'}}>
+              <rect x="6" y="4" width="22" height="36" rx="3" fill="rgba(212,168,83,0.15)" stroke="rgba(212,168,83,0.5)" strokeWidth="1.5"/>
+              <line x1="10" y1="10" x2="26" y2="10" stroke="rgba(212,168,83,0.3)" strokeWidth="1"/>
+              <line x1="10" y1="15" x2="26" y2="15" stroke="rgba(212,168,83,0.2)" strokeWidth="1"/>
+              <line x1="10" y1="20" x2="26" y2="20" stroke="rgba(212,168,83,0.2)" strokeWidth="1"/>
+            </g>
+          </svg>
+        </div>
+
+        <h1 style={{fontFamily:'Georgia,serif',fontSize:28,color:'#d4a853',letterSpacing:'2px',textAlign:'center',fontWeight:'normal'}}>
+          ✦ Okay Finance
+        </h1>
+        <p style={{fontSize:13,color:'rgba(245,237,216,0.4)',marginTop:6,textAlign:'center'}}>
+          Your story in numbers
+        </p>
+
+        <form onSubmit={handleSubmit} style={{marginTop:32}}>
+          <div style={{marginBottom:20}}>
+            <label style={labelStyle}>Chapter</label>
+            <input
+              type="text" value={user} onChange={e=>setUser(e.target.value)}
+              style={inputStyle} placeholder="Your chapter name"
+              onFocus={e=>{e.target.style.borderColor='rgba(212,168,83,0.6)';e.target.style.boxShadow='0 0 0 3px rgba(212,168,83,0.08)';}}
+              onBlur={e=>{e.target.style.borderColor='rgba(212,168,83,0.2)';e.target.style.boxShadow='none';}}
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Key</label>
+            <input
+              type="password" value={pass} onChange={e=>setPass(e.target.value)}
+              style={inputStyle} placeholder="Your secret key"
+              onFocus={e=>{e.target.style.borderColor='rgba(212,168,83,0.6)';e.target.style.boxShadow='0 0 0 3px rgba(212,168,83,0.08)';}}
+              onBlur={e=>{e.target.style.borderColor='rgba(212,168,83,0.2)';e.target.style.boxShadow='none';}}
+            />
+          </div>
+
+          <button type="submit" style={{
+            width:'100%', height:52, marginTop:28,
+            background:'linear-gradient(135deg,#d4a853 0%,#b8894a 100%)',
+            border:'none', borderRadius:12,
+            fontSize:15, fontWeight:600, color:'#1a1410', letterSpacing:'0.5px',
+            transition:'filter 200ms, transform 200ms'
+          }}
+          onMouseEnter={e=>{e.currentTarget.style.filter='brightness(1.1)';e.currentTarget.style.transform='translateY(-1px)';}}
+          onMouseLeave={e=>{e.currentTarget.style.filter='none';e.currentTarget.style.transform='translateY(0)';}}
+          onMouseDown={e=>e.currentTarget.style.transform='translateY(0)'}
+          >Open the library ✦</button>
+
+          {err && (
+            <p style={{
+              fontSize:13, color:'#c45a5a', textAlign:'center', marginTop:12,
+              animation:'fadeInFast 300ms ease-out both'
+            }}>
+              The library door remains closed... check your key.
+            </p>
+          )}
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+function Header({ onLogout }) {
+  return (
+    <div style={{
+      position:'fixed', top:0, width:'100%', height:60, zIndex:100,
+      background:'rgba(13,17,23,0.8)', backdropFilter:'blur(20px)',
+      borderBottom:'1px solid rgba(212,168,83,0.08)',
+      display:'flex', alignItems:'center', justifyContent:'space-between',
+      padding:'0 20px'
+    }}>
+      <div style={{display:'flex',alignItems:'center',gap:8}}>
+        <span style={{color:'#d4a853',fontSize:18}}>✦</span>
+        <span style={{color:'#f5edd8',fontSize:16,fontFamily:'Georgia,serif'}}>Okay Finance</span>
+      </div>
+      <span style={{fontSize:12,color:'rgba(245,237,216,0.4)',display:'none'}} className="date-label">{dateLabel()}</span>
+      <style>{`@media(min-width:768px){.date-label{display:block!important}}`}</style>
+      <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <span style={{fontSize:12,color:'rgba(245,237,216,0.5)'}}>{greeting()}, Akash</span>
+        <button onClick={onLogout} style={{
+          background:'transparent', border:'1px solid rgba(212,168,83,0.2)',
+          color:'rgba(245,237,216,0.6)', padding:'6px 14px',
+          borderRadius:20, fontSize:12, transition:'all 200ms'
+        }}
+        onMouseEnter={e=>{e.currentTarget.style.borderColor='#d4a853';e.currentTarget.style.color='#d4a853';}}
+        onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(212,168,83,0.2)';e.currentTarget.style.color='rgba(245,237,216,0.6)';}}
+        >Logout</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Bottom Nav ───────────────────────────────────────────────────────────────
+const TABS = [
+  {id:'home',   icon:'🏮', label:'Home'},
+  {id:'add',    icon:'➕', label:'Add'},
+  {id:'journal',icon:'📖', label:'Journal'},
+  {id:'goals',  icon:'🌳', label:'Goals'},
+  {id:'reports',icon:'📊', label:'Reports'},
+];
+function BottomNav({ active, onChange }) {
+  return (
+    <div style={{
+      position:'fixed', bottom:0, width:'100%', height:64, zIndex:100,
+      background:'rgba(13,17,23,0.95)', backdropFilter:'blur(20px)',
+      borderTop:'1px solid rgba(212,168,83,0.08)',
+      display:'flex', alignItems:'stretch'
+    }}>
+      {TABS.map(t => (
+        <button key={t.id} onClick={()=>onChange(t.id)} style={{
+          flex:1, display:'flex', flexDirection:'column', alignItems:'center',
+          justifyContent:'center', gap:2, background:'none', border:'none',
+          borderTop: active===t.id ? '2px solid #d4a853' : '2px solid transparent',
+          color: active===t.id ? '#d4a853' : 'rgba(245,237,216,0.35)',
+          transition:'color 200ms, border-color 200ms', padding:0
+        }}>
+          <span style={{fontSize:18}}>{t.icon}</span>
+          <span style={{fontSize:10}}>{t.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Glass Card ───────────────────────────────────────────────────────────────
+function GlassCard({ children, style={}, ...rest }) {
+  return (
+    <div style={{
+      background:'rgba(255,255,255,0.03)',
+      border:'1px solid rgba(255,255,255,0.07)',
+      borderRadius:16, padding:16,
+      ...style
+    }} {...rest}>
+      {children}
+    </div>
+  );
+}
+
+// ─── Circular Progress ────────────────────────────────────────────────────────
+function CircularProgress({ score }) {
+  return (
+    <div style={{position:'relative',width:80,height:80,flexShrink:0}}>
+      <div style={{
+        width:80,height:80,borderRadius:'50%',
+        background:`conic-gradient(#d4a853 ${score}%, rgba(255,255,255,0.06) 0%)`,
+        display:'flex',alignItems:'center',justifyContent:'center'
+      }}>
+        <div style={{
+          width:62,height:62,borderRadius:'50%',
+          background:'#0d1117',
+          display:'flex',alignItems:'center',justifyContent:'center'
+        }}>
+          <span style={{fontSize:18,color:'#d4a853',fontWeight:600}}>{score}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Tree SVG ─────────────────────────────────────────────────────────────────
+function TreeSVG({ pct }) {
+  const p = Math.min(100, Math.max(0, pct));
+  const leafColor = '#5a8f69';
+  const leafLight = '#6ba070';
+  const golden = '#d4a853';
+
+  const renderLeaves = () => {
+    if (p <= 25) return null;
+    if (p <= 50) return (
+      <>
+        <circle cx="30" cy="20" r="5" fill={leafColor} opacity="0.9"/>
+        <circle cx="20" cy="24" r="5" fill={leafColor} opacity="0.8"/>
+        <circle cx="40" cy="24" r="5" fill={leafColor} opacity="0.8"/>
+        <circle cx="30" cy="14" r="4" fill={leafLight} opacity="0.7"/>
+      </>
+    );
+    if (p <= 75) return (
+      <>
+        <circle cx="30" cy="18" r="8" fill={leafColor}/>
+        <circle cx="20" cy="22" r="7" fill={leafColor} opacity="0.9"/>
+        <circle cx="40" cy="22" r="7" fill={leafColor} opacity="0.9"/>
+        <circle cx="26" cy="14" r="6" fill={leafLight}/>
+        <circle cx="34" cy="14" r="6" fill={leafLight}/>
+        <circle cx="30" cy="10" r="5" fill={leafColor} opacity="0.8"/>
+        <circle cx="18" cy="17" r="5" fill={leafLight} opacity="0.7"/>
+        <circle cx="42" cy="17" r="5" fill={leafLight} opacity="0.7"/>
+        <circle cx="30" cy="25" r="6" fill={leafColor} opacity="0.6"/>
+      </>
+    );
+    // 76-100
+    return (
+      <>
+        <ellipse cx="30" cy="20" rx="18" ry="16" fill={leafColor}/>
+        <ellipse cx="20" cy="24" rx="10" ry="9" fill={leafColor} opacity="0.9"/>
+        <ellipse cx="40" cy="24" rx="10" ry="9" fill={leafColor} opacity="0.9"/>
+        <ellipse cx="30" cy="12" rx="12" ry="10" fill={leafLight}/>
+        <circle cx="22" cy="16" r="5" fill={leafLight} opacity="0.7"/>
+        <circle cx="38" cy="16" r="5" fill={leafLight} opacity="0.7"/>
+        {/* golden dots */}
+        <circle cx="25" cy="18" r="2.5" fill={golden} opacity="0.8"/>
+        <circle cx="35" cy="14" r="2" fill={golden} opacity="0.7"/>
+        <circle cx="30" cy="22" r="2" fill={golden} opacity="0.6"/>
+        <circle cx="38" cy="20" r="1.5" fill={golden} opacity="0.7"/>
+        {p === 100 && (
+          <>
+            <text x="12" y="8"  fontSize="8" fill={golden} style={{animation:'starPulse 2s ease-in-out infinite'}}>✦</text>
+            <text x="44" y="10" fontSize="8" fill={golden} style={{animation:'starPulse 2s ease-in-out 0.4s infinite'}}>✦</text>
+            <text x="8"  y="22" fontSize="7" fill={golden} style={{animation:'starPulse 2s ease-in-out 0.8s infinite'}}>✦</text>
+            <text x="48" y="26" fontSize="7" fill={golden} style={{animation:'starPulse 2s ease-in-out 1.2s infinite'}}>✦</text>
+            <text x="28" y="4"  fontSize="7" fill={golden} style={{animation:'starPulse 2s ease-in-out 1.6s infinite'}}>✦</text>
+          </>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <svg width="60" height="80" viewBox="0 0 60 80">
+      {/* trunk */}
+      <rect x="27" y="48" width="6" height="30" rx="2" fill="#8B6914"/>
+      {/* branches */}
+      <line x1="30" y1="50" x2="18" y2="38" stroke="#8B6914" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="30" y1="50" x2="42" y2="38" stroke="#8B6914" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="30" y1="48" x2="30" y2="36" stroke="#8B6914" strokeWidth="2" strokeLinecap="round"/>
+      {renderLeaves()}
+    </svg>
+  );
+}
+
+// ─── Dashboard Tab ────────────────────────────────────────────────────────────
+function Dashboard({ transactions }) {
+  const income = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const balance = income - expense;
+  const score = income === 0 ? 0 : Math.min(100, Math.max(0, Math.round((income - expense) / income * 100)));
+
+  let glowColor = 'rgba(212,168,83,0.2)';
+  if (balance > 0) glowColor = 'rgba(90,143,105,0.2)';
+  if (balance < 0) glowColor = 'rgba(196,90,90,0.2)';
+
+  let healthLabel = '', healthColor = '';
+  if (score >= 80) { healthLabel = 'Your garden is blooming 🌸'; healthColor = '#7ab88a'; }
+  else if (score >= 60) { healthLabel = 'The lantern still glows 🏮'; healthColor = '#d4a853'; }
+  else if (score >= 40) { healthLabel = 'Mist on the path 🌫️'; healthColor = 'rgba(245,237,216,0.6)'; }
+  else { healthLabel = "It's okay to rest 🌙"; healthColor = '#d4807e'; }
+
+  const recent = [...transactions].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+
+  const catEmoji = cat => {
+    const all = [...EXPENSE_CATS, ...INCOME_CATS];
+    const found = all.find(c=>c.label===cat);
+    return found ? found.emoji : '💳';
+  };
+
+  return (
+    <div className="tab-content">
+      {/* Balance */}
+      <div style={{textAlign:'center',padding:'32px 0 24px',position:'relative'}}>
+        <div style={{position:'relative',display:'inline-block'}}>
+          <div style={{
+            position:'absolute',width:200,height:200,borderRadius:'50%',
+            background:`radial-gradient(circle, ${glowColor} 0%, transparent 70%)`,
+            top:'50%',left:'50%',
+            animation:'pulse 3s ease-in-out infinite',
+            pointerEvents:'none'
+          }}/>
+          <div style={{position:'relative',zIndex:1}}>
+            <span style={{fontSize:24,color:'#d4a853',verticalAlign:'super',fontFamily:'Georgia,serif'}}>৳</span>
+            <span style={{fontSize:window.innerWidth<480?'40px':'48px',fontFamily:'Georgia,serif',color:'#f5edd8',fontWeight:'normal',letterSpacing:'-1px'}}>
+              <AnimCounter target={Math.abs(balance)} />
+            </span>
+          </div>
+        </div>
+        <div style={{display:'flex',justifyContent:'center',gap:10,marginTop:16}}>
+          <span style={{background:'rgba(90,143,105,0.15)',border:'1px solid rgba(90,143,105,0.3)',color:'#7ab88a',padding:'6px 14px',borderRadius:20,fontSize:13}}>
+            + ৳<AnimCounter target={income}/>
+          </span>
+          <span style={{background:'rgba(196,90,90,0.15)',border:'1px solid rgba(196,90,90,0.3)',color:'#d4807e',padding:'6px 14px',borderRadius:20,fontSize:13}}>
+            - ৳<AnimCounter target={expense}/>
+          </span>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+        {[
+          {icon:'💰',val:balance,label:'Balance'},
+          {icon:'📈',val:income, label:'Income'},
+          {icon:'📉',val:expense,label:'Expenses'},
+        ].map((s,i)=>(
+          <GlassCard key={i} style={{padding:'16px 14px',textAlign:'center',animationDelay:`${i*60}ms`}}>
+            <div style={{fontSize:22}}>{s.icon}</div>
+            <div style={{fontSize:16,fontFamily:'monospace',color:'#f5edd8',marginTop:6,fontWeight:600}}>
+              <AnimCounter target={Math.abs(s.val)} prefix={s.val<0?'-':''} />
+            </div>
+            <div style={{fontSize:11,color:'rgba(245,237,216,0.4)',marginTop:4,letterSpacing:'0.5px'}}>{s.label}</div>
+          </GlassCard>
+        ))}
+      </div>
+
+      {/* Health Score */}
+      <GlassCard style={{padding:20,marginTop:16,display:'flex',alignItems:'center',gap:20}}>
+        <CircularProgress score={score}/>
+        <div>
+          <div style={{fontSize:14,color:'#f5edd8',fontWeight:500}}>Financial Health</div>
+          <div style={{fontSize:13,color:healthColor,marginTop:4}}>{healthLabel}</div>
+        </div>
+      </GlassCard>
+
+      {/* Recent Transactions */}
+      <div style={{fontSize:13,color:'rgba(245,237,216,0.4)',letterSpacing:'1px',textTransform:'uppercase',margin:'24px 0 12px'}}>
+        Recent entries
+      </div>
+      {recent.length === 0 && (
+        <div style={{textAlign:'center',padding:'40px 0',color:'rgba(245,237,216,0.3)'}}>No entries yet</div>
+      )}
+      {recent.map((t,i) => {
+        const dm = getDayMonth(t.date);
+        const isIncome = t.type==='income';
+        const isLast = i===recent.length-1;
+        return (
+          <div key={t.id} style={{
+            display:'flex',alignItems:'center',padding:'14px 0',
+            borderBottom: isLast?'none':'1px dashed rgba(255,255,255,0.06)'
+          }}>
+            <div style={{width:3,height:40,borderRadius:2,background:isIncome?'#5a8f69':'#c45a5a',flexShrink:0}}/>
+            <div style={{marginLeft:12,minWidth:36,textAlign:'center'}}>
+              <div style={{fontSize:18,color:'#f5edd8',lineHeight:1}}>{dm.day}</div>
+              <div style={{fontSize:10,color:'rgba(245,237,216,0.4)'}}>{dm.month}</div>
+            </div>
+            <div style={{fontSize:22,margin:'0 12px'}}>{catEmoji(t.category)}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:14,color:'#f5edd8',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.description}</div>
+              <div style={{fontSize:11,color:'rgba(245,237,216,0.4)',marginTop:2}}>{t.category}</div>
+            </div>
+            <div style={{fontFamily:'monospace',fontSize:15,fontWeight:600,color:isIncome?'#7ab88a':'#d4807e',flexShrink:0,marginLeft:8}}>
+              {isIncome?'+':'-'}৳{fmt(t.amount)}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Add Entry Tab ─────────────────────────────────────────────────────────────
+function AddEntry({ onAdd }) {
+  const [type, setType] = useState('expense');
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState('');
+  const [desc, setDesc] = useState('');
+  const [date, setDate] = useState(today());
+  const [note, setNote] = useState('');
+  const [btnText, setBtnText] = useState('Ink it in ✦');
+
+  const cats = type==='income' ? INCOME_CATS : EXPENSE_CATS;
+
+  const inputStyle = {
+    width:'100%', padding:'14px 18px',
+    background:'rgba(255,255,255,0.04)',
+    border:'1px solid rgba(212,168,83,0.2)', borderRadius:12,
+    color:'#f5edd8', fontSize:14,
+    transition:'border-color 200ms, box-shadow 200ms'
+  };
+  const labelStyle = {fontSize:11,color:'rgba(245,237,216,0.5)',letterSpacing:'1.5px',textTransform:'uppercase',display:'block',marginBottom:8};
+
+  const handleFocus = e => { e.target.style.borderColor='rgba(212,168,83,0.5)'; e.target.style.boxShadow='0 0 0 4px rgba(212,168,83,0.06)'; };
+  const handleBlur  = e => { e.target.style.borderColor='rgba(212,168,83,0.2)'; e.target.style.boxShadow='none'; };
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!amount || !category) return;
+    const entry = {
+      id: uid(), type, amount: parseFloat(amount),
+      category, description: desc || category,
+      date, note, createdAt: new Date().toISOString()
+    };
+    onAdd(entry);
+    setBtnText('✓ Story written');
+    setTimeout(() => {
+      setBtnText('Ink it in ✦');
+      setAmount(''); setCategory(''); setDesc(''); setNote(''); setDate(today());
+    }, 1500);
+  }
+
+  return (
+    <div className="tab-content">
+      <h2 style={{fontFamily:'Georgia,serif',fontSize:22,color:'#f5edd8',marginBottom:8}}>Ink a new entry ✦</h2>
+      <p style={{fontSize:13,color:'rgba(245,237,216,0.4)',marginBottom:24}}>Every number is a moment lived.</p>
+
+      <form onSubmit={handleSubmit}>
+        {/* Type Toggle */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:24}}>
+          {[
+            {id:'income', emoji:'🍃', label:'Income', desc:'Something came in', sel:'rgba(90,143,105,0.15)', selBorder:'#5a8f69'},
+            {id:'expense',emoji:'🍂', label:'Expense',desc:'Something went out', sel:'rgba(196,90,90,0.15)', selBorder:'#c45a5a'},
+          ].map(t => (
+            <div key={t.id} onClick={()=>setType(t.id)} style={{
+              padding:'20px 16px', textAlign:'center', borderRadius:16, cursor:'pointer',
+              background: type===t.id ? t.sel : 'rgba(255,255,255,0.03)',
+              border: `2px solid ${type===t.id ? t.selBorder : 'rgba(255,255,255,0.06)'}`,
+              transition:'all 200ms'
+            }}>
+              <div style={{fontSize:28}}>{t.emoji}</div>
+              <div style={{fontSize:14,color:'#f5edd8',marginTop:8}}>{t.label}</div>
+              <div style={{fontSize:11,color:'rgba(245,237,216,0.4)',marginTop:4}}>{t.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Amount */}
+        <div style={{position:'relative',marginBottom:20}}>
+          <span style={{position:'absolute',left:18,top:'50%',transform:'translateY(-50%)',fontSize:22,color:'#d4a853',zIndex:1}}>৳</span>
+          <input
+            type="number" value={amount} onChange={e=>setAmount(e.target.value)}
+            placeholder="0.00" min="0" step="0.01"
+            style={{...inputStyle,paddingLeft:44,fontSize:28,fontFamily:'monospace'}}
+            onFocus={handleFocus} onBlur={handleBlur}
+          />
+        </div>
+
+        {/* Category */}
+        <div style={{marginBottom:20}}>
+          <label style={labelStyle}>Category</label>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
+            {cats.map(c => (
+              <div key={c.label} onClick={()=>setCategory(c.label)} style={{
+                padding:'10px 6px', textAlign:'center', borderRadius:12, cursor:'pointer',
+                background: category===c.label ? 'rgba(212,168,83,0.12)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${category===c.label ? 'rgba(212,168,83,0.4)' : 'rgba(255,255,255,0.07)'}`,
+                transition:'all 200ms'
+              }}>
+                <span style={{fontSize:20,display:'block'}}>{c.emoji}</span>
+                <span style={{fontSize:10,color:category===c.label?'#d4a853':'rgba(245,237,216,0.5)',marginTop:4,display:'block'}}>{c.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Description */}
+        <div style={{marginBottom:20}}>
+          <label style={labelStyle}>What happened?</label>
+          <input type="text" value={desc} onChange={e=>setDesc(e.target.value)}
+            placeholder="A rainy afternoon, tea and books..."
+            style={inputStyle} onFocus={handleFocus} onBlur={handleBlur}
+          />
+        </div>
+
+        {/* Date */}
+        <div style={{marginBottom:20}}>
+          <label style={labelStyle}>When?</label>
+          <input type="date" value={date} onChange={e=>setDate(e.target.value)}
+            style={inputStyle} onFocus={handleFocus} onBlur={handleBlur}
+          />
+        </div>
+
+        {/* Note */}
+        <div style={{marginBottom:0}}>
+          <label style={labelStyle}>A note for your soul (optional)</label>
+          <textarea value={note} onChange={e=>setNote(e.target.value)}
+            placeholder="How did this feel?..."
+            rows={3}
+            style={{...inputStyle,resize:'none',fontSize:13,color:'rgba(245,237,216,0.7)'}}
+            onFocus={handleFocus} onBlur={handleBlur}
+          />
+        </div>
+
+        <button type="submit" style={{
+          width:'100%', height:56, marginTop:32,
+          background:'linear-gradient(135deg,#d4a853 0%,#c49040 100%)',
+          borderRadius:14, fontSize:16, fontWeight:600, color:'#1a1410',
+          transition:'filter 200ms, transform 200ms'
+        }}
+        onMouseEnter={e=>{e.currentTarget.style.filter='brightness(1.1)';e.currentTarget.style.transform='translateY(-1px)';}}
+        onMouseLeave={e=>{e.currentTarget.style.filter='none';e.currentTarget.style.transform='translateY(0)';}}
+        >{btnText}</button>
+      </form>
+    </div>
+  );
+}
+
+// ─── Journal Tab ──────────────────────────────────────────────────────────────
+function Journal({ transactions, onDelete, onEdit }) {
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('All');
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirmId, setConfirmId] = useState(null);
+
+  const now = new Date();
+  const thisM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const lastM = (() => { const d=new Date(now); d.setMonth(d.getMonth()-1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
+
+  let filtered = transactions;
+  if (search) filtered = filtered.filter(t=>t.description.toLowerCase().includes(search.toLowerCase())||t.category.toLowerCase().includes(search.toLowerCase()));
+  if (filter==='Income') filtered = filtered.filter(t=>t.type==='income');
+  else if (filter==='Expense') filtered = filtered.filter(t=>t.type==='expense');
+  else if (filter==='This Month') filtered = filtered.filter(t=>t.date.startsWith(thisM));
+  else if (filter==='Last Month') filtered = filtered.filter(t=>t.date.startsWith(lastM));
+  filtered = [...filtered].sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  const catEmoji = cat => {
+    const all = [...EXPENSE_CATS,...INCOME_CATS];
+    const found = all.find(c=>c.label===cat);
+    return found?found.emoji:'💳';
+  };
+
+  function handleDelete(id) {
+    setDeletingId(id);
+    setTimeout(()=>{ onDelete(id); setDeletingId(null); setConfirmId(null); }, 320);
+  }
+
+  const inputStyle = {
+    width:'100%', padding:'12px 16px 12px 42px',
+    background:'rgba(255,255,255,0.04)',
+    border:'1px solid rgba(255,255,255,0.08)', borderRadius:12,
+    color:'#f5edd8', fontSize:14,
+    transition:'border-color 200ms'
+  };
+
+  return (
+    <div className="tab-content">
+      {/* Search */}
+      <div style={{position:'relative',marginBottom:16}}>
+        <span style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',fontSize:16,opacity:0.4}}>🔍</span>
+        <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
+          placeholder="Search your entries..." style={inputStyle}
+          onFocus={e=>{e.target.style.borderColor='rgba(212,168,83,0.4)';}}
+          onBlur={e=>{e.target.style.borderColor='rgba(255,255,255,0.08)';}}
+        />
+      </div>
+
+      {/* Filter Pills */}
+      <div className="filter-scroll" style={{marginBottom:20}}>
+        {['All','Income','Expense','This Month','Last Month'].map(f=>(
+          <button key={f} onClick={()=>setFilter(f)} style={{
+            padding:'7px 16px', borderRadius:20, fontSize:12, whiteSpace:'nowrap',
+            background: filter===f?'rgba(212,168,83,0.15)':'rgba(255,255,255,0.04)',
+            border: `1px solid ${filter===f?'rgba(212,168,83,0.4)':'rgba(255,255,255,0.08)'}`,
+            color: filter===f?'#d4a853':'rgba(245,237,216,0.5)',
+            transition:'all 200ms', flexShrink:0
+          }}>{f}</button>
+        ))}
+      </div>
+
+      {/* List */}
+      {filtered.length === 0 && (
+        <div style={{textAlign:'center',marginTop:60}}>
+          <div style={{fontSize:48}}>📖</div>
+          <div style={{fontSize:18,color:'rgba(245,237,216,0.5)',marginTop:16}}>The pages are empty...</div>
+          <div style={{fontSize:13,color:'rgba(245,237,216,0.3)',marginTop:8}}>Begin your story from the Add tab ✦</div>
+        </div>
+      )}
+      {filtered.map(t=>{
+        const isIncome=t.type==='income';
+        const isDeleting=deletingId===t.id;
+        return (
+          <div key={t.id} className={isDeleting?'delete-anim':''} style={{
+            padding:16, background:'rgba(255,255,255,0.025)',
+            border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, marginBottom:10
+          }}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div style={{display:'flex',alignItems:'center',gap:0,minWidth:0,flex:1}}>
+                <span style={{fontSize:18,flexShrink:0}}>{catEmoji(t.category)}</span>
+                <span style={{fontSize:14,color:'#f5edd8',marginLeft:10,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.description}</span>
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0,marginLeft:8}}>
+                <span style={{fontFamily:'monospace',fontSize:15,fontWeight:600,color:isIncome?'#7ab88a':'#d4807e'}}>
+                  {isIncome?'+':'-'}৳{fmt(t.amount)}
+                </span>
+                <button onClick={()=>setConfirmId(confirmId===t.id?null:t.id)} style={{fontSize:14,opacity:0.4,transition:'opacity 200ms',padding:'2px 4px'}}
+                  onMouseEnter={e=>e.currentTarget.style.opacity=1}
+                  onMouseLeave={e=>e.currentTarget.style.opacity=0.4}>🗑️</button>
+              </div>
+            </div>
+            <div style={{marginTop:8,display:'flex',gap:12,flexWrap:'wrap'}}>
+              <span style={{fontSize:11,color:'rgba(245,237,216,0.35)'}}>
+                {new Date(t.date).toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'})}
+              </span>
+              <span style={{fontSize:11,color:'rgba(245,237,216,0.35)'}}>{t.category}</span>
+              {t.note && <span style={{fontSize:11,color:'rgba(212,168,83,0.5)',fontStyle:'italic'}}>{t.note}</span>}
+            </div>
+            {confirmId===t.id && (
+              <div style={{marginTop:12,display:'flex',gap:8,justifyContent:'flex-end'}}>
+                <button onClick={()=>setConfirmId(null)} style={{
+                  padding:'6px 14px',borderRadius:8,fontSize:12,
+                  background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',
+                  color:'rgba(245,237,216,0.6)'
+                }}>Cancel</button>
+                <button onClick={()=>handleDelete(t.id)} style={{
+                  padding:'6px 14px',borderRadius:8,fontSize:12,
+                  background:'rgba(196,90,90,0.2)',border:'1px solid rgba(196,90,90,0.4)',
+                  color:'#d4807e'
+                }}>Delete</button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Goals Tab ────────────────────────────────────────────────────────────────
+const GOAL_QUOTES = [
+  "Every coin is a seed planted in time. 🌱",
+  "Patience is the root of all abundance. 🏮",
+  "The journey of a thousand coins begins with one. ✦",
+  "You are closer than you think. 🌿",
+  "Slowly and surely the tree grows tall. 🌳",
+];
+
+function GoalCard({ goal, onAddFunds, onDelete }) {
+  const pct = goal.target > 0 ? Math.min(100, Math.round(goal.saved / goal.target * 100)) : 0;
+  const [barW, setBarW] = useState(0);
+  const quote = GOAL_QUOTES[goal.id.charCodeAt(0) % GOAL_QUOTES.length];
+
+  useEffect(() => {
+    const t = setTimeout(() => setBarW(pct), 80);
+    return () => clearTimeout(t);
+  }, [pct]);
+
+  const daysLeft = goal.deadline ? Math.ceil((new Date(goal.deadline)-new Date())/(1000*60*60*24)) : null;
+
+  return (
+    <GlassCard style={{padding:24,marginBottom:16,position:'relative'}}>
+      <div style={{
+        position:'absolute',top:16,right:16,
+        background:'rgba(90,143,105,0.2)',border:'1px solid rgba(90,143,105,0.3)',
+        color:'#7ab88a',padding:'4px 10px',borderRadius:12,fontSize:12
+      }}>{pct}%</div>
+
+      <div style={{display:'flex',justifyContent:'center',marginBottom:8}}>
+        <TreeSVG pct={pct}/>
+      </div>
+      <div style={{fontFamily:'Georgia,serif',fontSize:16,color:'#f5edd8',textAlign:'center'}}>{goal.name}</div>
+      <div style={{fontSize:13,color:'rgba(245,237,216,0.5)',textAlign:'center',marginTop:4}}>
+        ৳{fmt(goal.saved)} / ৳{fmt(goal.target)}
+      </div>
+
+      <div style={{height:6,background:'rgba(255,255,255,0.06)',borderRadius:3,margin:'12px 0',overflow:'hidden'}}>
+        <div style={{
+          height:'100%',borderRadius:3,
+          background:'linear-gradient(90deg,#5a8f69,#7ab88a)',
+          width:`${barW}%`,transition:'width 800ms ease-out'
+        }}/>
+      </div>
+
+      <div style={{fontSize:12,fontStyle:'italic',color:'rgba(212,168,83,0.6)',textAlign:'center',marginTop:8}}>{quote}</div>
+
+      {daysLeft !== null && (
+        <div style={{fontSize:11,color:'rgba(245,237,216,0.35)',textAlign:'center',marginTop:6}}>
+          {daysLeft > 0 ? `${daysLeft} days remaining` : daysLeft === 0 ? 'Due today!' : `${Math.abs(daysLeft)} days overdue`}
+        </div>
+      )}
+
+      <button onClick={()=>onAddFunds(goal.id)} style={{
+        width:'100%',height:40,marginTop:16,
+        background:'transparent',border:'1px solid rgba(212,168,83,0.3)',
+        color:'#d4a853',borderRadius:10,fontSize:13,
+        transition:'background 200ms'
+      }}
+      onMouseEnter={e=>e.currentTarget.style.background='rgba(212,168,83,0.08)'}
+      onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+      >Add funds</button>
+    </GlassCard>
+  );
+}
+
+function Goals({ goals, onAddGoal, onAddFunds, onDeleteGoal }) {
+  const [name,setName]=useState('');
+  const [target,setTarget]=useState('');
+  const [saved,setSaved]=useState('');
+  const [deadline,setDeadline]=useState('');
+  const [fundsId,setFundsId]=useState(null);
+  const [fundsAmt,setFundsAmt]=useState('');
+
+  const inputStyle={
+    width:'100%',padding:'12px 14px',
+    background:'rgba(255,255,255,0.04)',
+    border:'1px solid rgba(212,168,83,0.2)',borderRadius:10,
+    color:'#f5edd8',fontSize:14,
+    transition:'border-color 200ms'
+  };
+  const labelStyle={fontSize:11,color:'rgba(245,237,216,0.5)',letterSpacing:'1.5px',textTransform:'uppercase',display:'block',marginBottom:6};
+  const handleFocus=e=>{e.target.style.borderColor='rgba(212,168,83,0.5)';};
+  const handleBlur=e=>{e.target.style.borderColor='rgba(212,168,83,0.2)';};
+
+  function submit(e){
+    e.preventDefault();
+    if(!name||!target) return;
+    onAddGoal({id:uid(),name,target:parseFloat(target),saved:parseFloat(saved)||0,deadline,createdAt:new Date().toISOString()});
+    setName('');setTarget('');setSaved('');setDeadline('');
+  }
+  function submitFunds(e){
+    e.preventDefault();
+    if(!fundsAmt) return;
+    onAddFunds(fundsId, parseFloat(fundsAmt));
+    setFundsId(null);setFundsAmt('');
+  }
+
+  return (
+    <div className="tab-content">
+      {/* Add Goal */}
+      <GlassCard style={{padding:20,marginBottom:24}}>
+        <div style={{fontSize:16,color:'#f5edd8',marginBottom:16}}>Plant a new seed 🌱</div>
+        <form onSubmit={submit}>
+          <div style={{marginBottom:14}}>
+            <label style={labelStyle}>Goal name</label>
+            <input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. New laptop" style={inputStyle} onFocus={handleFocus} onBlur={handleBlur}/>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+            <div>
+              <label style={labelStyle}>Target ৳</label>
+              <input type="number" value={target} onChange={e=>setTarget(e.target.value)} placeholder="50000" style={inputStyle} onFocus={handleFocus} onBlur={handleBlur}/>
+            </div>
+            <div>
+              <label style={labelStyle}>Saved ৳</label>
+              <input type="number" value={saved} onChange={e=>setSaved(e.target.value)} placeholder="0" style={inputStyle} onFocus={handleFocus} onBlur={handleBlur}/>
+            </div>
+          </div>
+          <div style={{marginBottom:14}}>
+            <label style={labelStyle}>Deadline (optional)</label>
+            <input type="date" value={deadline} onChange={e=>setDeadline(e.target.value)} style={inputStyle} onFocus={handleFocus} onBlur={handleBlur}/>
+          </div>
+          <button type="submit" style={{
+            width:'100%',height:48,
+            background:'linear-gradient(135deg,#d4a853 0%,#b8894a 100%)',
+            borderRadius:12,fontSize:14,fontWeight:600,color:'#1a1410',
+            transition:'filter 200ms'
+          }}
+          onMouseEnter={e=>e.currentTarget.style.filter='brightness(1.1)'}
+          onMouseLeave={e=>e.currentTarget.style.filter='none'}
+          >Plant this seed 🌱</button>
+        </form>
+      </GlassCard>
+
+      {/* Add Funds Modal */}
+      {fundsId && (
+        <GlassCard style={{padding:20,marginBottom:16,border:'1px solid rgba(212,168,83,0.3)'}}>
+          <div style={{fontSize:14,color:'#f5edd8',marginBottom:12}}>Add funds to goal</div>
+          <form onSubmit={submitFunds} style={{display:'flex',gap:8}}>
+            <input type="number" value={fundsAmt} onChange={e=>setFundsAmt(e.target.value)}
+              placeholder="Amount ৳" style={{...inputStyle,flex:1}}
+              onFocus={handleFocus} onBlur={handleBlur}
+            />
+            <button type="submit" style={{
+              padding:'0 20px',background:'linear-gradient(135deg,#d4a853,#b8894a)',
+              borderRadius:10,fontSize:14,fontWeight:600,color:'#1a1410'
+            }}>Add</button>
+            <button type="button" onClick={()=>setFundsId(null)} style={{
+              padding:'0 14px',background:'rgba(255,255,255,0.04)',
+              border:'1px solid rgba(255,255,255,0.1)',
+              borderRadius:10,fontSize:13,color:'rgba(245,237,216,0.5)'
+            }}>✕</button>
+          </form>
+        </GlassCard>
+      )}
+
+      {goals.length===0 && (
+        <div style={{textAlign:'center',marginTop:40}}>
+          <div style={{fontSize:40}}>🌱</div>
+          <div style={{fontSize:16,color:'rgba(245,237,216,0.4)',marginTop:12}}>No seeds planted yet</div>
+          <div style={{fontSize:13,color:'rgba(245,237,216,0.3)',marginTop:6}}>Plant your first goal above ✦</div>
+        </div>
+      )}
+      {goals.map(g=>(
+        <GoalCard key={g.id} goal={g}
+          onAddFunds={id=>{ setFundsId(id); setFundsAmt(''); }}
+          onDelete={onDeleteGoal}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Reports Tab ──────────────────────────────────────────────────────────────
+function Reports({ transactions }) {
+  const now = new Date();
+  const monthLabel = now.toLocaleString('en-US',{month:'long',year:'numeric'});
+  const thisM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+  const thisMonthTx = transactions.filter(t=>t.date.startsWith(thisM));
+  const monthIncome = thisMonthTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const monthExpense = thisMonthTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const monthBalance = monthIncome - monthExpense;
+  const savingsRate = monthIncome > 0 ? Math.round((monthBalance/monthIncome)*100) : 0;
+
+  // Category breakdown
+  const catTotals = {};
+  thisMonthTx.filter(t=>t.type==='expense').forEach(t=>{
+    catTotals[t.category] = (catTotals[t.category]||0) + t.amount;
+  });
+  const catEntries = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]);
+  const maxCat = catEntries.length > 0 ? catEntries[0][1] : 1;
+  const catEmoji = cat => {
+    const all=[...EXPENSE_CATS,...INCOME_CATS];
+    const f=all.find(c=>c.label===cat);
+    return f?f.emoji:'💳';
+  };
+
+  // 6-month trend
+  const months = [...Array(6)].map((_,i)=>{
+    const d = new Date(now); d.setMonth(d.getMonth()-i);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const exp = transactions.filter(t=>t.date.startsWith(key)&&t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    return { label:d.toLocaleString('en-US',{month:'short'}), exp };
+  }).reverse();
+  const maxExp = Math.max(...months.map(m=>m.exp), 1);
+
+  // Bar widths with animation
+  const [barAnims, setBarAnims] = useState({});
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const anim = {};
+      catEntries.forEach(([cat]) => { anim[cat] = true; });
+      setBarAnims(anim);
+    }, 100);
+    return () => clearTimeout(t);
+  }, [thisM]);
+
+  // AI Insight
+  const foodPct = monthExpense > 0 ? ((catTotals['Food']||0)/monthExpense)*100 : 0;
+  let insight = 'Every number here is a moment lived. The ledger of your days tells a story only you can read. ✦';
+  if (foodPct > 30) insight = 'You\'ve been nourishing yourself generously — perhaps the soul needed feeding too. 🍵';
+  else if (savingsRate > 20) insight = 'The lantern glows warmly. You are building something beautiful, one coin at a time. 🏮';
+  else if (savingsRate < 0) insight = 'The river ran fast this month. But rivers always find their way home. Be gentle with yourself. 🌊';
+
+  return (
+    <div className="tab-content">
+      {/* Monthly Summary */}
+      <GlassCard style={{padding:24,marginBottom:16}}>
+        <div style={{fontFamily:'Georgia,serif',fontSize:20,color:'#f5edd8',marginBottom:16}}>{monthLabel}</div>
+        {[
+          {label:'Total Income',  val:`৳${fmt(monthIncome)}`,  color:'#7ab88a'},
+          {label:'Total Expenses',val:`৳${fmt(monthExpense)}`, color:'#d4807e'},
+          {label:'Net Balance',   val:`৳${fmt(Math.abs(monthBalance))}`, color:monthBalance>=0?'#7ab88a':'#d4807e'},
+          {label:'Savings Rate',  val:`${savingsRate}%`, color:savingsRate>=0?'#d4a853':'#d4807e'},
+        ].map((r,i)=>(
+          <div key={i} style={{
+            display:'flex',justifyContent:'space-between',alignItems:'center',
+            padding:'10px 0',borderBottom:i<3?'1px solid rgba(255,255,255,0.05)':'none'
+          }}>
+            <span style={{fontSize:13,color:'rgba(245,237,216,0.5)'}}>{r.label}</span>
+            <span style={{fontSize:15,fontFamily:'monospace',fontWeight:600,color:r.color}}>{r.val}</span>
+          </div>
+        ))}
+      </GlassCard>
+
+      {/* Category Breakdown */}
+      {catEntries.length > 0 && (
+        <GlassCard style={{padding:20,marginBottom:16}}>
+          <div style={{fontSize:13,color:'rgba(245,237,216,0.4)',letterSpacing:'1px',textTransform:'uppercase',marginBottom:16}}>Where it went</div>
+          {catEntries.map(([cat,amt])=>{
+            const pct = maxExp>0 ? (amt/maxExp*100) : 0;
+            const totalPct = monthExpense>0 ? Math.round(amt/monthExpense*100) : 0;
+            const color = CAT_COLORS[cat]||'#8a9ab8';
+            return (
+              <div key={cat} style={{display:'flex',alignItems:'center',marginBottom:12}}>
+                <span style={{minWidth:100,fontSize:13,color:'rgba(245,237,216,0.7)'}}>{catEmoji(cat)} {cat}</span>
+                <div style={{flex:1,height:8,background:'rgba(255,255,255,0.06)',borderRadius:4,margin:'0 12px',overflow:'hidden'}}>
+                  <div style={{
+                    height:'100%',borderRadius:4,background:color,
+                    width: barAnims[cat] ? `${pct}%` : '0%',
+                    transition:'width 800ms ease-out'
+                  }}/>
+                </div>
+                <span style={{fontSize:12,color:'rgba(245,237,216,0.5)',whiteSpace:'nowrap'}}>৳{fmt(amt)} ({totalPct}%)</span>
+              </div>
+            );
+          })}
+        </GlassCard>
+      )}
+
+      {/* 6 Month Trend */}
+      <GlassCard style={{padding:20,marginBottom:16}}>
+        <div style={{fontSize:13,color:'rgba(245,237,216,0.4)',letterSpacing:'1px',textTransform:'uppercase',marginBottom:16}}>6-month story</div>
+        <div style={{display:'flex',alignItems:'flex-end',gap:8,height:110}}>
+          {months.map((m,i)=>{
+            const h = maxExp > 0 ? Math.max(4, Math.round((m.exp/maxExp)*80)) : 4;
+            return (
+              <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center'}}>
+                <div style={{
+                  width:'100%',background:'rgba(212,168,83,0.2)',
+                  borderRadius:'4px 4px 0 0',borderTop:'2px solid #d4a853',
+                  height:`${h}px`,transition:'height 600ms ease-out'
+                }}/>
+                <span style={{fontSize:10,color:'rgba(245,237,216,0.35)',marginTop:6}}>{m.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      </GlassCard>
+
+      {/* AI Insight */}
+      <div style={{
+        background:'rgba(212,168,83,0.04)',
+        border:'1px solid rgba(212,168,83,0.15)',
+        borderRadius:16,padding:24,marginBottom:16
+      }}>
+        <div style={{fontSize:11,color:'#d4a853',letterSpacing:'2px',textTransform:'uppercase'}}>✦ Insight</div>
+        <div style={{height:1,background:'rgba(212,168,83,0.1)',margin:'12px 0'}}/>
+        <p style={{fontSize:14,color:'rgba(245,237,216,0.8)',lineHeight:1.7,fontStyle:'italic'}}>{insight}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main App ─────────────────────────────────────────────────────────────────
+function MainApp({ onLogout }) {
+  const [tab, setTab] = useState('home');
+  const [transactions, setTransactions] = useState(() => loadTx() || SEED_TX);
+  const [goals, setGoals] = useState(() => loadGoals());
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => { saveTx(transactions); }, [transactions]);
+  useEffect(() => { saveGoals(goals); }, [goals]);
+
+  function showToast(msg) { setToast(msg); }
+
+  function addTransaction(entry) {
+    setTransactions(prev => [entry, ...prev]);
+    showToast('✦ Entry inked into your story');
+    setTab('home');
+  }
+  function deleteTransaction(id) {
+    setTransactions(prev => prev.filter(t=>t.id!==id));
+    showToast('Entry removed from the ledger');
+  }
+  function addGoal(goal) {
+    setGoals(prev => [...prev, goal]);
+    showToast('🌱 New seed planted!');
+  }
+  function addFundsToGoal(id, amt) {
+    setGoals(prev => prev.map(g => g.id===id ? {...g, saved: Math.min(g.saved+amt, g.target)} : g));
+    showToast('✦ Funds added to your goal');
+  }
+
+  const contentStyle = {
+    paddingTop:76, paddingBottom:80,
+    overflowY:'auto', height:'100vh',
+    paddingLeft:16, paddingRight:16
+  };
+
+  const tabMap = {
+    home:    <Dashboard transactions={transactions}/>,
+    add:     <AddEntry onAdd={addTransaction}/>,
+    journal: <Journal transactions={transactions} onDelete={deleteTransaction}/>,
+    goals:   <Goals goals={goals} onAddGoal={addGoal} onAddFunds={addFundsToGoal} onDeleteGoal={id=>setGoals(p=>p.filter(g=>g.id!==id))}/>,
+    reports: <Reports transactions={transactions}/>,
+  };
+
+  return (
+    <div style={{height:'100vh',overflow:'hidden',background:'#0d1117',position:'relative'}}>
+      <div style={{
+        position:'fixed',inset:0,zIndex:0,pointerEvents:'none',
+        background:'radial-gradient(ellipse 800px 600px at 50% 30%, rgba(212,168,83,0.04) 0%, transparent 70%)'
+      }}/>
+      <Particles/>
+      <Header onLogout={onLogout}/>
+      <div style={contentStyle}>
+        <div style={{maxWidth:600,margin:'0 auto'}}>
+          {tabMap[tab]}
+        </div>
+      </div>
+      <BottomNav active={tab} onChange={setTab}/>
+      {toast && <Toast msg={toast} onDone={()=>setToast(null)}/>}
+    </div>
+  );
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+function App() {
+  const [loggedIn, setLoggedIn] = useState(() => {
+    const s = loadSession();
+    return s && s.loggedIn;
+  });
+
+  function handleLogin(user) {
+    saveSession({ user, loggedIn: true });
+    setLoggedIn(true);
+  }
+  function handleLogout() {
+    saveSession(null);
+    setLoggedIn(false);
+  }
+
+  return loggedIn
+    ? <MainApp onLogout={handleLogout}/>
+    : <LoginScreen onLogin={handleLogin}/>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
